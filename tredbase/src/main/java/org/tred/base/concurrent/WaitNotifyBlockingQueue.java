@@ -33,9 +33,9 @@ public class WaitNotifyBlockingQueue<E> implements BlockingQueue<E> {
             long millis = unit.toMillis(timeout);
             long remainingNanos = nanos - millis * 1000000;
 
-            System.out.println("enqueue:" + count + ":" + capacity);
+//            System.out.println("enqueue:" + count + ":" + capacity);
             while (count == capacity) {
-                System.out.println("waiting in enqueue");
+//                System.out.println("waiting in enqueue");
                 wait(millis, (int) remainingNanos);
             }
 
