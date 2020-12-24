@@ -40,8 +40,10 @@ public class PrefetchingFileIterator implements Iterator<String> {
 //                Thread.sleep(10);
 //                System.out.println(String.format("%s: %s",Thread.currentThread().getName(),line));
                 blockingQueue.put(line);
-                synchronized (lock){
-                    lock.notifyAll();
+                if(blockingQueue.size()==1) {
+                    synchronized (lock) {
+                        lock.notifyAll();
+                    }
                 }
             }
             synchronized (lock) {
