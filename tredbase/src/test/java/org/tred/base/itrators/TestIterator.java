@@ -49,4 +49,11 @@ public class TestIterator {
         System.out.println("Records: "+length);
         System.out.println("TIme taken by FileIterator: " + (System.currentTimeMillis() - st));
     }
+
+    @Test
+    public void name() throws Exception {
+
+        System.out.println(6 & ~2);
+
+    }
 }

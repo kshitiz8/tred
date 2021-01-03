@@ -1,12 +1,12 @@
 package org.tred.base;
-public class Test {
-    ExecutorService exS = Executors.newSingleThreadExecutor(new ThreadFactory() {
-        @Override
-        public Thread newThread(@NotNull Runnable r) {
-            Thread t = new Thread(r);
-            t.setDaemon(true);
-            return t;
-        }
+
+import java.util.concurrent.*;
+
+public class ExecutorTest {
+    ExecutorService exS = Executors.newSingleThreadExecutor(r ->{
+        Thread t = new Thread(r);
+        t.setDaemon(true);
+        return t;
     });
 
      public int call(int val){
@@ -47,7 +47,7 @@ public class Test {
 
     public static void main(String[] args) {
         long st = System.currentTimeMillis();
-         Test t= new Test();
+        ExecutorTest t= new ExecutorTest();
 
         for(int i=0; i<10000; i++){
             int j = t.call(i);
