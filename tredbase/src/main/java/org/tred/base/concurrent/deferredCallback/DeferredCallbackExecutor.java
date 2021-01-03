@@ -9,8 +9,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiFunction;
-import java.util.function.Function;
-
+import static org.tred.base.concurrent.deferredCallback.TestProducer.sout;
 /**
  * Design and implement a thread-safe class that allows registeration of callback methods that are executed after a
  * user specified time interval in seconds has elapsed.
@@ -18,9 +17,7 @@ import java.util.function.Function;
  */
 
 public class DeferredCallbackExecutor {
-    public static void sout(Object message) {
-        System.out.println(Thread.currentThread().getName() + ": " + message);
-    }
+
 
     public static class CallBack implements Runnable {
         private final String id;
@@ -80,13 +77,13 @@ public class DeferredCallbackExecutor {
 
     private final ExecutorService runnerService;
     private final Thread pollerThread;
-    private final PriorityQueue<CallBack> jobQueue;
+    private final PriorityQueue<CallBack> callbackQueue;
 
     private Boolean drainAndShutDown = false;
     private Boolean shutDown = false;
     Lock lock = new ReentrantLock(true);
-    Condition pollingCondition = lock.newCondition();
-    Condition drainingCondition = lock.newCondition();
+    Condition nonEmptyQueue = lock.newCondition();
+    Condition emptyQueue = lock.newCondition();
 
     public DeferredCallbackExecutor() {
         pollerThread = new Thread(this::poller, "Poller");
@@ -94,7 +91,7 @@ public class DeferredCallbackExecutor {
             Thread t = new Thread(r, "Runner");
             return t;
         });
-        jobQueue = new PriorityQueue<>((c1, c2) -> (int) (c1.getExecuteTime() - c2.getExecuteTime()));
+        callbackQueue = new PriorityQueue<>((c1, c2) -> (int) (c1.getExecuteTime() - c2.getExecuteTime()));
     }
 
     public void start() {
@@ -110,24 +107,26 @@ public class DeferredCallbackExecutor {
         lock.lock();
         while (!shutDown) {
             sout("Awake, Let's see if any job became current");
-            while (jobQueue.size() > 0 && jobQueue.peek().getExecuteTime() <= System.currentTimeMillis()) {
-                CallBack cb = jobQueue.remove();
+            while (callbackQueue.size() > 0 && callbackQueue.peek().getExecuteTime() <= System.currentTimeMillis()) {
+                CallBack cb = callbackQueue.remove();
                 sout("Starting " + cb.getId());
                 runnerService.execute(cb);
             }
-            try {
-                if (jobQueue.size() > 0) {
-                    long waitTime = jobQueue.peek().getExecuteTime() - System.currentTimeMillis();
-                    sout("Poller is Waiting for " + waitTime + "ms");
-                    pollingCondition.await(waitTime, TimeUnit.MILLISECONDS);
-                } else {
-                    sout("Poller is waiting until something is inserted");
-                    if (drainAndShutDown) drainingCondition.signalAll();
-                    pollingCondition.await();
+            if (callbackQueue.size() > 0) {
+                long waitTime = callbackQueue.peek().getExecuteTime() - System.currentTimeMillis();
+                if(waitTime<=0)continue;
+                sout("Poller is Waiting for " + waitTime + "ms");
+                try {
+                    nonEmptyQueue.await(waitTime, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e) {
                 }
-
-            } catch (InterruptedException e) {
-
+            }else{
+                sout("Poller is waiting until something is inserted");
+                emptyQueue.signalAll();
+                try {
+                    nonEmptyQueue.await();
+                } catch (InterruptedException e) {
+                }
             }
         }
 
@@ -147,8 +146,8 @@ public class DeferredCallbackExecutor {
 
         if (!shutDown && !drainAndShutDown) {
             sout("adding to the job queue:" + callback.getId());
-            jobQueue.add(callback);  //accept if shutdown not called
-            pollingCondition.signalAll();
+            callbackQueue.add(callback);  //accept if shutdown not called
+            nonEmptyQueue.signalAll();
 
         }
         lock.unlock();
@@ -166,14 +165,14 @@ public class DeferredCallbackExecutor {
         if (drainQueue) {
             sout("draining");
             drainAndShutDown = true;
-            while (jobQueue.size() > 0) {
-                drainingCondition.awaitUninterruptibly();
+            while (callbackQueue.size() > 0) {
+                emptyQueue.awaitUninterruptibly();
             }
         }
         sout("shutting down");
         shutDown = true;
         runnerService.shutdown();
-        pollingCondition.signalAll();
+        nonEmptyQueue.signalAll();
         lock.unlock();
 
     }
