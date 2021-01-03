@@ -8,12 +8,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class TestProducer implements  Runnable{
-    final DeferredCallback deferredCallback;
+    final DeferredCallbackExecutor deferredCallbackExecutor;
     final int maxTime;
     final int delay;
 
-    public TestProducer(DeferredCallback deferredCallback, int maxTime, int delay) {
-        this.deferredCallback = deferredCallback;
+    public TestProducer(DeferredCallbackExecutor deferredCallbackExecutor, int maxTime, int delay) {
+        this.deferredCallbackExecutor = deferredCallbackExecutor;
         this.maxTime = maxTime;
         this.delay = delay;
     }
@@ -25,23 +25,23 @@ public class TestProducer implements  Runnable{
         int tte = Math.abs(new Random().nextInt())%maxTime + delay;
         context.put("tte", ""+tte);
         System.out.println(Thread.currentThread().getName() + ":  added job with time to execution = " + tte + " seconds");
-        DeferredCallback.CallBack callBack = new DeferredCallback.CallBack(
+        DeferredCallbackExecutor.CallBack callBack = new DeferredCallbackExecutor.CallBack(
                 tte,
                 (o,u) -> {
                     Map<String, String> map = (Map<String, String>) o;
-                    DeferredCallback.CallBack callBack1 =  (DeferredCallback.CallBack)u;
+                    DeferredCallbackExecutor.CallBack callBack1 =  (DeferredCallbackExecutor.CallBack)u;
                     System.out.println(Thread.currentThread().getName() + ": Actual Invocation From Consumer: " + callBack1 + " at: " + System.currentTimeMillis() );
                     return null;
                 },
                 context
         );
-        deferredCallback.registerCallback(callBack);
+        deferredCallbackExecutor.registerCallback(callBack);
     }
 
 
 
     public static void main(String[] args) throws InterruptedException {
-        DeferredCallback dc = new DeferredCallback();
+        DeferredCallbackExecutor dc = new DeferredCallbackExecutor();
         dc.start();
 
         ExecutorService producerService = Executors.newFixedThreadPool(5, r->{
@@ -59,7 +59,7 @@ public class TestProducer implements  Runnable{
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        Thread.sleep(3000);
+        Thread.sleep(30000);
         dc.shutdown(true);
 
     }
