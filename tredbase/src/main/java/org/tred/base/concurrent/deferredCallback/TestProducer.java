@@ -8,6 +8,43 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class TestProducer implements  Runnable{
+    public static final String ANSI_RESET = "\u001B[0m";
+    public static final String ANSI_BLACK = "\u001B[30m";
+    public static final String ANSI_RED = "\u001B[31m";
+    public static final String ANSI_GREEN = "\u001B[32m";
+    public static final String ANSI_YELLOW = "\u001B[33m";
+    public static final String ANSI_BLUE = "\u001B[34m";
+    public static final String ANSI_PURPLE = "\u001B[35m";
+    public static final String ANSI_CYAN = "\u001B[36m";
+    public static final String ANSI_WHITE = "\u001B[37m";
+    public static void sout(Object message) {
+        String tName = Thread.currentThread().getName();
+        switch (tName){
+            case "Poller":
+                System.out.print(ANSI_RED);
+                sout(tName, message);
+                System.out.println(ANSI_RESET);
+                break;
+            case "Runner":
+                System.out.print(ANSI_GREEN);
+                sout(tName, message);
+                System.out.println(ANSI_RESET);
+                break;
+            case "producers":
+                System.out.print(ANSI_BLUE);
+                sout(tName, message);
+                System.out.println(ANSI_RESET);
+                break;
+            default:
+                sout(tName, message);
+                System.out.println();
+
+        }
+    }
+    public static void sout(String tName,Object message ){
+        System.out.print("["+System.currentTimeMillis()+"]\t"+tName + ": " + message);
+    }
+
     final DeferredCallbackExecutor deferredCallbackExecutor;
     final int maxTime;
     final int delay;
@@ -24,13 +61,13 @@ public class TestProducer implements  Runnable{
         Map<String, String> context = new HashMap<>();
         int tte = Math.abs(new Random().nextInt())%maxTime + delay;
         context.put("tte", ""+tte);
-        System.out.println(Thread.currentThread().getName() + ":  added job with time to execution = " + tte + " seconds");
+        sout("added job with time to execution = " + tte + " seconds");
         DeferredCallbackExecutor.CallBack callBack = new DeferredCallbackExecutor.CallBack(
                 tte,
                 (o,u) -> {
                     Map<String, String> map = (Map<String, String>) o;
                     DeferredCallbackExecutor.CallBack callBack1 =  (DeferredCallbackExecutor.CallBack)u;
-                    System.out.println(Thread.currentThread().getName() + ": Actual Invocation From Consumer: " + callBack1 + " at: " + System.currentTimeMillis() );
+                    sout("Actual Invocation From Consumer: " + callBack1 + " at: " + System.currentTimeMillis() );
                     return null;
                 },
                 context
@@ -49,9 +86,10 @@ public class TestProducer implements  Runnable{
             return t;
         }) ;
 
-        System.out.print("queueing jobs ");
+
         for(int i=0;i<8; i++) {
             producerService.execute(new TestProducer(dc, 10, 10));
+            Thread.sleep((Math.abs(new Random().nextInt()))%2000);
         }
         producerService.shutdown();
         try {
@@ -59,7 +97,7 @@ public class TestProducer implements  Runnable{
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        Thread.sleep(30000);
+        Thread.sleep(3000);
         dc.shutdown(true);
 
     }
