@@ -40,6 +40,11 @@ public class PrefetchingFileIterator implements Iterator<String> {
 //                Thread.sleep(10);
 //                System.out.println(String.format("%s: %s",Thread.currentThread().getName(),line));
                 blockingQueue.put(line);
+                if(blockingQueue.size()==1) {
+                    synchronized (lock) {
+                        lock.notifyAll();
+                    }
+                }
             }
             synchronized (lock) {
                 done = true;
@@ -54,13 +59,13 @@ public class PrefetchingFileIterator implements Iterator<String> {
 
     @Override
     public boolean hasNext() {
-
         if(blockingQueue.size() > 0) return true;
         if(done) return false;
+
         synchronized (lock) {
             while (!done && blockingQueue.size() == 0) {
                 try {
-                    lock.wait(10);
+                    lock.wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
