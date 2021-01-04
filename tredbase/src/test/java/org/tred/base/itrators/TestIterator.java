@@ -2,7 +2,7 @@ package org.tred.base.itrators;
 
 
 import org.junit.Test;
-import org.tred.base.concurrent.SemaphoreBlockingQueue;
+import org.tred.base.concurrent.semaphore.SemaphoreBlockingQueue;
 import org.tred.base.concurrent.WaitNotifyBlockingQueue;
 import org.tred.base.iterators.FileIterator;
 import org.tred.base.iterators.PrefetchingFileIterator;

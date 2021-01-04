@@ -1,8 +1,5 @@
 package org.tred.base.iterators;
 
-import org.tred.base.concurrent.SemaphoreBlockingQueue;
-import org.tred.base.concurrent.WaitNotifyBlockingQueue;
-
 import java.io.*;
 import java.util.Iterator;
 import java.util.concurrent.ArrayBlockingQueue;

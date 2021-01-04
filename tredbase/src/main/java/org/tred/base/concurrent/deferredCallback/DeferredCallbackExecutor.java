@@ -121,11 +121,13 @@ public class DeferredCallbackExecutor {
                 } catch (InterruptedException e) {
                 }
             }else{
-                sout("Poller is waiting until something is inserted");
-                emptyQueue.signalAll();
-                try {
-                    nonEmptyQueue.await();
-                } catch (InterruptedException e) {
+                while(!shutDown && callbackQueue.size()==0) {
+                    sout("Poller is waiting until something is inserted");
+                    emptyQueue.signalAll();
+                    try {
+                        nonEmptyQueue.await();
+                    } catch (InterruptedException e) {
+                    }
                 }
             }
         }

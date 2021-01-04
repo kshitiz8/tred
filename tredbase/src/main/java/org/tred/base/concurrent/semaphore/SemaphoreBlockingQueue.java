@@ -1,4 +1,4 @@
-package org.tred.base.concurrent;
+package org.tred.base.concurrent.semaphore;
 
 import java.util.Collection;
 import java.util.Iterator;
