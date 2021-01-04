@@ -1,10 +1,7 @@
 package org.tred.base.iterators;
 
-import org.tred.base.concurrent.SemaphoreBlockingQueue;
-
 import java.io.*;
 import java.util.Iterator;
-import java.util.function.Consumer;
 
 public class FileIterator implements Iterator<String>{
     final File file;

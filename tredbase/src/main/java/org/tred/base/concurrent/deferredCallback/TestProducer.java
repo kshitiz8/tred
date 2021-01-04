@@ -21,28 +21,22 @@ public class TestProducer implements  Runnable{
         String tName = Thread.currentThread().getName();
         switch (tName){
             case "Poller":
-                System.out.print(ANSI_RED);
-                sout(tName, message);
-                System.out.println(ANSI_RESET);
+                sout( ANSI_RED , tName, message);
                 break;
             case "Runner":
-                System.out.print(ANSI_GREEN);
-                sout(tName, message);
-                System.out.println(ANSI_RESET);
+                sout( ANSI_GREEN , tName, message);
                 break;
             case "producers":
-                System.out.print(ANSI_BLUE);
-                sout(tName, message);
-                System.out.println(ANSI_RESET);
+                sout( ANSI_BLUE , tName, message);
                 break;
             default:
-                sout(tName, message);
-                System.out.println();
+                sout( ANSI_BLACK , tName, message);
+
 
         }
     }
-    public static void sout(String tName,Object message ){
-        System.out.print("["+System.currentTimeMillis()+"]\t"+tName + ": " + message);
+    public static void sout(String color, String tName,Object message ){
+        System.out.println(color + "["+System.currentTimeMillis()+"]\t"+tName + ": " + message + ANSI_RESET);
     }
 
     final DeferredCallbackExecutor deferredCallbackExecutor;
@@ -87,7 +81,7 @@ public class TestProducer implements  Runnable{
         }) ;
 
 
-        for(int i=0;i<8; i++) {
+        for(int i=0;i<100; i++) {
             producerService.execute(new TestProducer(dc, 10, 10));
             Thread.sleep((Math.abs(new Random().nextInt()))%2000);
         }
